@@ -11,7 +11,10 @@ db_host = "localhost"
 db_port = "5432"
 
 engine = create_engine(f'postgresql://{db_usuario}@{db_host}:{db_port}/{db_nombre}')
+Session = sessionmaker(bing=engine)
+Base = declarative_base()
 
+session = Session()
 
 
 
