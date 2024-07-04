@@ -3,14 +3,18 @@ from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from flask_cors import CORS
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-db_nombre = "oplesk"
-db_usuario = "gianfranco"
-db_host = "localhost"
-db_port = "5432"
+db_nombre = os.getenv('db_nombre')
+db_usuario = os.getenv('db_usuario')
+db_host = os.getenv('db_host')
+db_port = os.getenv('db_port')
 
 engine = create_engine(f'postgresql://{db_usuario}@{db_host}:{db_port}/{db_nombre}')
 Session = sessionmaker(bind=engine)
