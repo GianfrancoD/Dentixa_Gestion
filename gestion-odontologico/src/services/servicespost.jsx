@@ -2,7 +2,7 @@ import axios from "axios";
 import PropTypes from "prop-types";
 
 // eslint-disable-next-line no-undef
-const API_URL = process.env.API_URL;
+const API_URL = process.env.VITE_API_URL;
 
 export const ServicesAll = (port, id, data, method) => {
   let url = `${API_URL}/${port}`;
@@ -20,7 +20,7 @@ export const ServicesAll = (port, id, data, method) => {
 
 ServicesAll.prototype = {
   method: PropTypes.oneOf(["get", "post", "put", "delete"]).isRequired,
-  id: PropTypes.string,
+  id: PropTypes.number,
   data: PropTypes.string,
   port: PropTypes.string.isRequired,
 };
