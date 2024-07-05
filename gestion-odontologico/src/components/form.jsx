@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import axios from "axios";
+import { ServicesAll } from "../services/servicespost";
+
 export const Formulario = () => {
   const [alluser, setAlluser] = useState([]);
   const [formulario, setFormulario] = useState({
@@ -16,14 +17,7 @@ export const Formulario = () => {
     setFormulario({ nombre: "", apellido: "" });
     setAlluser([...alluser, formulario]);
 
-    axios
-      .post("http://127.0.0.1:5000/create", formulario, {
-        headers: {
-          "content-type": "application/json",
-          mode: "no-cache",
-          Accept: "application/json",
-        },
-      })
+    ServicesAll("create", undefined, formulario, "post")
       .then((response) => {
         console.log(response.data);
         setMensaje("Usuario Creado con exito");
@@ -40,6 +34,7 @@ export const Formulario = () => {
         }
       });
   };
+
   return (
     <>
       <form action="" onSubmit={handleSubmit}>

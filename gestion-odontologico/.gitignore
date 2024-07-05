@@ -25,3 +25,4 @@ dist-ssr
 
 # Ignore files and Archive
 backend/.env
+.env
