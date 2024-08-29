@@ -115,7 +115,7 @@ const useTargetHandler = <T extends Target>(
   initialValues: T = {} as T,
   validationRules: Record<string, ValidationRules> = {},
   Storage: StorageOptions = { storageType: undefined, storageKey: "formData" },
-  security: SecurityOptions = { enableCSRF: true, rateLimit: 1000 }
+  security: SecurityOptions = { enableCSRF: false, rateLimit: 1000 }
 ): [
   Target,
   (e: React.ChangeEvent<HTMLInputElement>) => void,

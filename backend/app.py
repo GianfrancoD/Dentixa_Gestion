@@ -3,6 +3,8 @@ from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from marshmallow import Schema, ValidationError, fields
+# from flask_wtf.csrf import CSRFProtect, generate_csrf
+# import secrets
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
@@ -11,7 +13,7 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-
+# app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', secrets.token_urlsafe(16)) 
 db_nombre = os.getenv('db_nombre')
 db_usuario = os.getenv('db_usuario')
 db_host = os.getenv('db_host')
@@ -24,7 +26,7 @@ Base = declarative_base()
 session = Session()
 
 class UserClinic(Base):
-    __tablename__ = 'add_user_clinic'
+    __tablename__ = 'add_user_dentixa'
     id = Column(Integer, primary_key=True)
     nombre = Column(String(100))
     apellido = Column(String(100))
@@ -42,6 +44,13 @@ class UserClinicSchema(Schema):
 user_clinic_schema = UserClinicSchema()
 users_clinic_schema = UserClinicSchema(many=True)
 
+# csrf = CSRFProtect(app)
+
+# @app.route('/csrf-token', methods=['GET'])
+# def get_csrf_token():
+#     token = generate_csrf()
+#     return jsonify({'X-CSRF-Token': token})
+
 
 @app.route('/create', methods=['POST'])
 def get_user():
@@ -49,8 +58,11 @@ def get_user():
         session = Session()
         try:
             data = user_clinic_schema.load(request.json)
+            # token = request.json.get('_csrfToken')
             nombre = data.get('nombre')
             apellido = data.get('apellido')
+            # if not token or not csrf.validate_csrf(token):
+                # return jsonify({'message': 'Token CSRF inválido ❌'}), 400
             user = session.query(UserClinic).filter_by(nombre=nombre, apellido=apellido).first()
             if user:
                 return jsonify({'message': 'El usuario ya existe ❌'}), 400

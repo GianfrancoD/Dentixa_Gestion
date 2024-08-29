@@ -48,7 +48,7 @@ interface UseHttpRequestResult {
       | "text/plain"
       | "application/xml",
     params?: Record<string, string | number | boolean>
-  ) => Promise<void>;
+  ) => Promise<ApiResponse | null>;
   apiResponse: ApiResponse | null;
   userFound: boolean;
   error: string | null;
@@ -99,9 +99,17 @@ const useHttpRequest = (enableCSRF = false): UseHttpRequestResult => {
       method: Method = "get",
       http: string = "application/json",
       params?: Record<string, string | number | boolean>
-    ) => {
+    ): Promise<void> => {
       validate(endpoint, method, http);
-      console.log("Llamando a la API:", endpoint, id, data, method, http);
+      console.log(
+        "Llamando a la API:",
+        endpoint,
+        id,
+        data,
+        method,
+        http,
+        params
+      );
       let url = `${apiUrl}/${endpoint}${id ? `/${id}` : ""}`;
       if (params) {
         const queryParams = new URLSearchParams(
@@ -112,29 +120,33 @@ const useHttpRequest = (enableCSRF = false): UseHttpRequestResult => {
         ).toString();
         url += `?${queryParams}`;
       }
-
-      try {
-        const csrfToken = enableCSRF ? getCsrfToken() : null;
-        const response = await axios[method](url, data, {
-          headers: {
-            "X-CSRF-Token": csrfToken,
-            "content-type": http,
-            mode: "no-cache",
-            Accept: "application/json",
-          },
-        });
-        console.log("Respuesta de la API:", response.data);
-        setApiResponse(response.data.message || response.data);
-        setUserFound(true);
-      } catch (error) {
-        const tempError: ApiError = error as ApiError;
-        console.error("Error en la llamada a la API:", error);
-        setUserFound(true);
-        setApiResponse({
-          message:
-            tempError.response?.data?.message || "Error al crear el usuario ⚠️",
-        });
-        setError(tempError.response?.data?.message || "Error desconocido");
+      if (endpoint === "csrf-token") {
+        try {
+          const csrfToken = enableCSRF ? getCsrfToken() : null;
+          const response = await axios[method](url, data, {
+            headers: {
+              "X-CSRF-Token": csrfToken,
+              "content-type": http,
+              mode: "no-cache",
+              Accept: "application/json",
+            },
+          });
+          console.log("Respuesta de la API:", response.data);
+          setApiResponse(response.data.message || response.data);
+          setUserFound(true);
+          return response.data;
+        } catch (error) {
+          const tempError: ApiError = error as ApiError;
+          console.error("Error en la llamada a la API:", error);
+          setUserFound(true);
+          setApiResponse({
+            message:
+              tempError.response?.data?.message ||
+              "Error al crear el usuario ⚠️",
+          });
+          setError(tempError.response?.data?.message || "Error desconocido");
+          return null;
+        }
       }
     },
     [enableCSRF]
