@@ -1,8 +1,7 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 import useTargetHandler from "../../../hooks/useTargetHandler";
-// import { useCallback, useEffect, useState } from "react";
+
 import axios from "axios";
-// import { useCookies } from "react-cookie";
 
 type Users = {
   nombre: string;
@@ -30,7 +29,7 @@ const UserForm = () => {
       },
     }
   );
-  // const [, setCookies] = useCookies(["XSRF-TOKEN"]);
+
   // const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   // const fetchCsrfToken = useCallback(async () => {
@@ -41,10 +40,9 @@ const UserForm = () => {
   //     );
   //     console.log("Response:", response);
   //     const csrfToken = response.data["X-CSRF-Token"];
-  //     setCookies("XSRF-TOKEN", csrfToken, {
+  //     Cookies.set("csrfToken", csrfToken, {
   //       path: "/",
   //       secure: true,
-  //       maxAge: 1000,
   //     });
   //     console.log("CSRF token:", csrfToken);
   //   } catch (error) {
@@ -52,18 +50,13 @@ const UserForm = () => {
   //   }
 
   //   setCsrfToken(csrfToken);
-  // }, [csrfToken, setCookies]);
+  // }, [csrfToken]);
 
   // useEffect(() => {
   //   fetchCsrfToken();
   // }, [fetchCsrfToken]);
 
   const onSubmit = async () => {
-    // if (!csrfToken) {
-    //   console.error("CSRF token is not available");
-    //   return;
-    // }
-    // console.log("CSRF token:", csrfToken);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/create`,
@@ -74,6 +67,7 @@ const UserForm = () => {
           },
         }
       );
+
       console.log("Formulario enviado con éxito");
       console.log(response.data);
     } catch (error) {
