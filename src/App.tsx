@@ -1,10 +1,10 @@
 import "./App.css";
-import UserForm from "./modules/auth/components/UserAuth";
+import DentalSoftwareLanding from "../src/modules/pages/components/page";
 
 function App() {
   return (
     <>
-      <UserForm />
+      <DentalSoftwareLanding />
     </>
   );
 }

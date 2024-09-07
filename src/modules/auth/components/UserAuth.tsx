@@ -1,127 +1,292 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
-import useTargetHandler from "../../../hooks/useTargetHandler";
-
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Paper,
+  Tab,
+  Tabs,
+  InputAdornment,
+  IconButton,
+  Snackbar,
+} from "@mui/material";
+import {
+  Visibility,
+  VisibilityOff,
+  AccountCircle,
+  Email,
+  Lock,
+} from "@mui/icons-material";
 import axios from "axios";
 
-type Users = {
-  nombre: string;
-  apellido: string;
+// interface TabPanelProps {
+//   children?: React.ReactNode;
+//   index: number;
+//   value: number;
+// }
+
+const TabPanel: React.FC = (props) => {
+  const { children, value, index, ...other } = props as {
+    children?: React.ReactNode;
+    value: number;
+    index: number;
+  };
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`auth-tabpanel-${index}`}
+      aria-labelledby={`auth-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
 };
 
-const UserForm = () => {
-  const [target, handleTarget, handleSubmit, errors] = useTargetHandler<Users>(
-    {
-      nombre: "",
-      apellido: "",
-    },
-    {
-      nombre: {
-        required: true,
-        requiredMessage: "El nombre es obligatorio 🚨",
-        patternMessage: "no puede tener o llevar números",
-        pattern: /^[a-zA-Z]+$/,
-      },
-      apellido: {
-        required: true,
-        requiredMessage: "El apellido es obligatorio 🚨",
-        patternMessage: "no puede tener o llevar números",
-        pattern: /^[a-zA-Z]+$/,
-      },
-    }
-  );
+const UserForm: React.FC = () => {
+  const [target, setTarget] = useState({
+    nombre: "",
+    email: "",
+    password: "",
+  });
+  const [value, setValue] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
-  // const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
 
-  // const fetchCsrfToken = useCallback(async () => {
-  //   console.log("Fetching CSRF token...");
-  //   try {
-  //     const response = await axios.get(
-  //       `${import.meta.env.VITE_API_URL}/csrf-token`
-  //     );
-  //     console.log("Response:", response);
-  //     const csrfToken = response.data["X-CSRF-Token"];
-  //     Cookies.set("csrfToken", csrfToken, {
-  //       path: "/",
-  //       secure: true,
-  //     });
-  //     console.log("CSRF token:", csrfToken);
-  //   } catch (error) {
-  //     console.error("Error al obtener el token CSRF:", error);
-  //   }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target as { name: string; value: string };
+    setTarget((prev) => ({ ...prev, [name]: value }));
+  };
 
-  //   setCsrfToken(csrfToken);
-  // }, [csrfToken]);
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  // useEffect(() => {
-  //   fetchCsrfToken();
-  // }, [fetchCsrfToken]);
+  const handleMouseDownPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+  };
 
-  const onSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const endpoint = value === 0 ? "login" : "register";
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/create`,
+      const resp = await axios.post(
+        `${import.meta.env.VITE_API_URL}/${endpoint}`,
         target,
         {
           headers: {
-            "content-type": "application/json",
+            "Content-Type": "application/json",
           },
         }
       );
 
-      console.log("Formulario enviado con éxito");
-      console.log(response.data);
+      setSnackbarMessage(resp.data.message);
+      setOpenSnackbar(true);
+      console.log("Response: ", resp.data);
     } catch (error) {
-      console.error("Error en la llamada a la API:", error);
-      if (error) {
-        console.error("Error de respuesta:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        setSnackbarMessage(
+          error.response.data.message || "An error occurred. Please try again."
+        );
+      } else {
+        setSnackbarMessage("An unexpected error occurred. Please try again.");
       }
+      setOpenSnackbar(true);
     }
   };
 
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit(onSubmit)}
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        maxWidth: 400,
-        margin: "auto",
-        marginTop: 0,
-        padding: 3,
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        boxShadow: 2,
-      }}
-    >
-      <Typography variant="h5" component="h2" gutterBottom>
-        Registro de Usuario
-      </Typography>
-      <TextField
-        label="Nombre"
-        variant="outlined"
-        fullWidth
-        name="nombre"
-        value={target.nombre}
-        onChange={handleTarget}
-        error={!!errors.nombre}
-        helperText={errors.nombre?.message}
+    <Container component="main" maxWidth="sm">
+      <Paper
+        elevation={6}
+        sx={{
+          mt: 8,
+          p: 4,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Typography component="h1" variant="h4" sx={{ mb: 2 }}>
+          Bienvenidos to Dentixa
+        </Typography>
+        <Box sx={{ borderBottom: 1, borderColor: "divider", width: "100%" }}>
+          <Tabs
+            value={value}
+            onChange={handleChange}
+            aria-label="auth tabs"
+            centered
+          >
+            <Tab label="Login" />
+            <Tab label="Register" />
+          </Tabs>
+        </Box>
+        <TabPanel value={value} index={0}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 1 }}
+          >
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              value={target.email}
+              onChange={handleInputChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              id="password"
+              autoComplete="current-password"
+              value={target.password}
+              onChange={handleInputChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Sign In
+            </Button>
+          </Box>
+        </TabPanel>
+        <TabPanel value={value} index={1}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 1 }}
+          >
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="name"
+              label="Full Name"
+              name="nombre"
+              autoComplete="name"
+              autoFocus
+              value={target.nombre}
+              onChange={handleInputChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AccountCircle />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              value={target.email}
+              onChange={handleInputChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              id="password"
+              autoComplete="new-password"
+              value={target.password}
+              onChange={handleInputChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Register
+            </Button>
+          </Box>
+        </TabPanel>
+      </Paper>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setOpenSnackbar(false)}
+        message={snackbarMessage}
       />
-      <TextField
-        label="Apellido"
-        variant="outlined"
-        fullWidth
-        name="apellido"
-        value={target.apellido}
-        onChange={handleTarget}
-        error={!!errors.apellido}
-        helperText={errors.apellido?.message}
-      />
-      <Button type="submit" variant="contained" color="primary">
-        Enviar
-      </Button>
-    </Box>
+    </Container>
   );
 };
 
