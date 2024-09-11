@@ -80,6 +80,7 @@ const UserForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setTarget({ nombre: "", email: "", password: "" });
     const endpoint = value === 0 ? "login" : "register";
     try {
       const resp = await axios.post(
