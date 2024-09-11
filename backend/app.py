@@ -51,8 +51,6 @@ class UserClinic(Base):
     
 Base.metadata.create_all(engine)
 
-    
-
 class UserClinicSchema(Schema):
     id = fields.Int(dump_only=True)
     nombre = fields.Str(required=True)
@@ -62,7 +60,7 @@ class UserClinicSchema(Schema):
 user_clinic_schema = UserClinicSchema()
 users_clinic_schema = UserClinicSchema(many=True)
 
-
+# Registrar usuario
 @app.route('/register', methods=['POST'])
 def get_user():
     if request.method == 'POST':
@@ -91,6 +89,7 @@ def get_user():
         finally:
             session.close()
 
+# Ingresar usuario
 @app.route('/login', methods=['POST'])
 def all_login():
     if request.method == 'POST':
@@ -110,15 +109,23 @@ def all_login():
                 return jsonify({'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user)}), 200
             else:
                 return jsonify({'message': 'Invalid password ❌'}), 400
-            
         except Exception as e:
             return jsonify({'message': str(e)}), 500
         finally:
             session.close()
 
-        
+# Cerrar Session
+@app.route('/logout', methods=['POST'])
+def logout():
+    user = login_manager.current_user()
+    user.is_active = False
+    session.commit()
+    login_manager.logout_user()
+    return jsonify({'message': 'Session closed successfully'}), 200
 
         
+
+# Mostrar todos los datos de la base de datos 
 @app.route('/registrados', methods=['GET'])
 def all_registrados():
     if request.method == 'GET':
@@ -130,7 +137,5 @@ def all_registrados():
             session.close()
             
             
-
-
 if __name__ == '__init__':
     app.run(debug=True)
