@@ -21,18 +21,18 @@ import {
 } from "@mui/icons-material";
 import axios from "axios";
 
-// interface TabPanelProps {
-//   children?: React.ReactNode;
-//   index: number;
-//   value: number;
-// }
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
-const TabPanel: React.FC = (props) => {
-  const { children, value, index, ...other } = props as {
-    children?: React.ReactNode;
-    value: number;
-    index: number;
-  };
+const TabPanel: React.FC<TabPanelProps> = ({
+  children,
+  value,
+  index,
+  ...other
+}) => {
   return (
     <div
       role="tabpanel"
@@ -56,6 +56,7 @@ const UserForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [error, setError] = useState(false);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -64,6 +65,11 @@ const UserForm: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target as { name: string; value: string };
     setTarget((prev) => ({ ...prev, [name]: value }));
+    if (!value) {
+      setError(true);
+    } else {
+      setError(false);
+    }
   };
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -145,6 +151,8 @@ const UserForm: React.FC = () => {
               autoFocus
               value={target.email}
               onChange={handleInputChange}
+              error={error}
+              helperText={error ? "Este campo es obligatorio" : ""}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -164,6 +172,8 @@ const UserForm: React.FC = () => {
               autoComplete="current-password"
               value={target.password}
               onChange={handleInputChange}
+              error={error}
+              helperText={error ? "Este campo es obligatorio" : ""}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -212,6 +222,8 @@ const UserForm: React.FC = () => {
               autoFocus
               value={target.nombre}
               onChange={handleInputChange}
+              error={error}
+              helperText={error ? "Este campo es obligatorio" : ""}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -230,6 +242,8 @@ const UserForm: React.FC = () => {
               autoComplete="email"
               value={target.email}
               onChange={handleInputChange}
+              error={error}
+              helperText={error ? "Este campo es obligatorio" : ""}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -249,6 +263,8 @@ const UserForm: React.FC = () => {
               autoComplete="new-password"
               value={target.password}
               onChange={handleInputChange}
+              error={error}
+              helperText={error ? "Este campo es obligatorio" : ""}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
