@@ -1,6 +1,7 @@
 import bcrypt
-from flask import Flask, make_response, request, jsonify
-from sqlalchemy import create_engine, Column, String, Integer
+from flask import Flask, request, jsonify
+from flask_login import LoginManager, login_user
+from sqlalchemy import Boolean, create_engine, Column, String, Integer
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from marshmallow import Schema, ValidationError, fields
@@ -13,6 +14,12 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+# para iniciar session
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'all_login'
+
+app.secret_key = os.getenv('SECRET_KEY')
 db_nombre = os.getenv('db_nombre')
 db_usuario = os.getenv('db_usuario')
 db_host = os.getenv('db_host')
@@ -29,12 +36,22 @@ class UserClinic(Base):
     nombre = Column(String(100))
     email = Column(String(100), unique=True)
     password = Column(String(100))
+    is_active = Column(Boolean, default=False, nullable=False)
 
     def __init__(self, nombre, email, password):
         self.nombre=nombre
         self.email=email
         self.password=password
+
+    def get_id(self):
+        return self.id
+
+    def is_active_user(self):
+        return self.is_active
+    
 Base.metadata.create_all(engine)
+
+    
 
 class UserClinicSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -55,12 +72,14 @@ def get_user():
             nombre = data.get('nombre')
             email = data.get('email')
             password = data.get('password')
-            user = session.query(UserClinic).filter_by(nombre=nombre, email=email, password=password).all()
-            if user:
+            exist_email = session.query(UserClinic).filter_by(email=email).first()
+            user = session.query(UserClinic).filter_by(nombre=nombre, email=email, password=password).first()
+            if user or exist_email:
                 return jsonify({'message': 'El usuario ya existe ❌'}), 400
             
             hashead_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             new_user = UserClinic(nombre=nombre, email=email, password=hashead_password)
+            # new_user.is_active = True
             session.add(new_user)
             session.commit()
             return jsonify({'message': 'Usuario creado con éxito ✅', 'user': user_clinic_schema.dump(new_user)}), 201
@@ -73,7 +92,7 @@ def get_user():
             session.close()
 
 @app.route('/login', methods=['POST'])
-def alllogin():
+def all_login():
     if request.method == 'POST':
         session = Session()
         try:
@@ -81,11 +100,17 @@ def alllogin():
             email = data.get('email')
             password = data.get('password')
             user = session.query(UserClinic).filter_by(email=email).first()
-            hash = bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8'))
-            if user and hash:
+            if user is None:
+                return jsonify({'message': 'Invalid name ❌'}), 400
+            hashted = bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8'))
+            if user and hashted:
+                user.is_active = True
+                session.commit()
+                login_user(user)
                 return jsonify({'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user)}), 200
-            else: 
-                return jsonify({'message': 'Invalid data (email or password) ❌'}), 401
+            else:
+                return jsonify({'message': 'Invalid password ❌'}), 400
+            
         except Exception as e:
             return jsonify({'message': str(e)}), 500
         finally:
