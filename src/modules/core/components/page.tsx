@@ -15,6 +15,9 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
+  ThemeProvider,
+  CssBaseline,
+  createTheme,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -27,27 +30,45 @@ import {
 import { Link } from "react-router-dom";
 
 const DentalSoftwareLanding: React.FC = () => {
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: "#2196f3",
+      },
+      secondary: {
+        main: "#f50057",
+      },
+    },
+  });
   return (
     <>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Dentixa
-          </Typography>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Button variant="contained" color="info" to="/Login" component={Link}>
-            login
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Dentixa
+            </Typography>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Button
+              variant="contained"
+              color="info"
+              to="/Login"
+              component={Link}
+            >
+              login
+            </Button>
+          </Toolbar>
+        </AppBar>
+      </ThemeProvider>
 
       <Container maxWidth="lg">
         {/* Hero Section */}

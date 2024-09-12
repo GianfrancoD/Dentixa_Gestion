@@ -1,6 +1,7 @@
 import App from "./App";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import UserForm from "./modules/auth/components/UserAuth";
+import UserAppoin from "./modules/appointment/components/Appointment";
 
 const router = createBrowserRouter([
   {
@@ -10,6 +11,11 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <UserForm />,
+  },
+  {
+    // citas
+    path: "/appointment",
+    element: <UserAppoin />,
   },
 ]);
 

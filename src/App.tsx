@@ -1,5 +1,5 @@
 import "./App.css";
-import DentalSoftwareLanding from "../src/modules/pages/components/page";
+import DentalSoftwareLanding from "./modules/core/components/page";
 
 function App() {
   return (
