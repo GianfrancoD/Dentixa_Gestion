@@ -1,12 +1,11 @@
 import datetime
-from functools import wraps
 import bcrypt
 from flask import Flask, request, jsonify
 from flask_login import LoginManager, current_user, login_required, login_user
-from sqlalchemy import Boolean, Date, DateTime, create_engine, Column, String, Integer
+from sqlalchemy import Boolean, DateTime, create_engine, Column, String, Integer, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from marshmallow import Schema, ValidationError, fields, post_load
+from marshmallow import Schema, ValidationError, fields
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
@@ -40,6 +39,7 @@ class UserClinic(Base):
     password = Column(String(100))
     is_active = Column(Boolean, default=False, nullable=False)
     role = Column(String(70), default='user')
+    fecha_registro = Column(DateTime, default=func.now())
 
     def __init__(self, nombre, email, password, role='user'):
         self.nombre=nombre
@@ -116,7 +116,7 @@ def get_user():
             
             hashead_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             new_user = UserClinic(nombre=nombre, email=email, password=hashead_password, role=role)
-            # new_user.is_active = True
+            new_user.is_active = True
             if not new_user.is_active:
                 return jsonify({'message': 'Problem, Contact with sopport ⚠️'})
             session.add(new_user)
@@ -150,7 +150,7 @@ def all_login():
                 if user.role == "user" and user.is_active:
                     return jsonify({'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user), 'redirect_url': '/appointment'}), 200
                 elif user.role == 'admin' and user.is_active:
-                    return jsonify({'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user), 'redirect_url': '/'}), 200
+                    return jsonify({'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user), 'redirect_url': '/DashAd'}), 200
             else:
                 return jsonify({'message': 'Invalid password ❌'}), 400
         except Exception as e:
@@ -180,14 +180,10 @@ def user_appointment():
             telefono = data.get('telefono')
             servicio = data.get('servicio')
             fecha = data.get('fecha').strftime('%Y-%m-%d %H:%M:%S')
-            user_appoint = session.query(UserAppointment).filter_by(nombre=nombre,apellido=apellido,email=email,telefono=telefono, servicio=servicio, fecha=fecha).first()
-            if user_appoint:
-                return jsonify({'message': 'Appointment already exists ❌'}), 400 
-            else:
-                new_appoint = UserAppointment(nombre=nombre, apellido=apellido, email=email, telefono=telefono, servicio=servicio, fecha=fecha)
-                session.add(new_appoint)
-                session.commit()
-                return jsonify({'message': 'Appointment created successfully ✅'}), 201
+            new_appoint = UserAppointment(nombre=nombre, apellido=apellido, email=email, telefono=telefono, servicio=servicio, fecha=fecha)
+            session.add(new_appoint)
+            session.commit()
+            return jsonify({'message': 'Appointment created successfully ✅'}), 201
         except ValidationError as err:
             print("Errores de validación:", err.messages)
             return jsonify(err.messages), 400
@@ -200,7 +196,6 @@ def user_appointment():
         
 # Mostrar todos los datos de la base de datos 
 @app.route('/registrados', methods=['GET'])
-@login_required
 def all_registrados():
     if request.method == 'GET':
         session = Session()
@@ -209,6 +204,31 @@ def all_registrados():
             return jsonify(users_clinic_schema.dump(users))
         finally: 
             session.close()
+
+@app.route('/registrado_cita', methods=['GET'])
+def all_registrados_cita():
+    if request.method == 'GET':
+        session = Session()
+        try: 
+            users = session.query(UserAppointment).all()
+            return jsonify(users_appointSchema.dump(users))
+        finally: 
+            session.close()
+    
+@app.route('/nuevos_clientes', methods=['GET'])
+def nuevos_clientes():
+    session = Session()
+    try:
+        today = datetime.date.today()
+        # Contar nuevos usuarios registrados hoy
+        count = session.query(func.count(UserClinic.id)).filter(
+            func.date(UserClinic.fecha_registro) == today
+        ).scalar()
+        return jsonify({'nuevos_clientes': count})
+    finally:
+        session.close()
+
+
             
             
 if __name__ == '__init__':

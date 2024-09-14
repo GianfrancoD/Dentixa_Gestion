@@ -125,18 +125,18 @@ const UserAppoin: React.FC = () => {
     //   fecha: new Date(formData.fecha).toISOString(),
     // };
 
-    // if (
-    //   !formData.nombre ||
-    //   !formData.apellido ||
-    //   !formData.telefono ||
-    //   !formData.email ||
-    //   !formData.servicio ||
-    //   !formData.fecha
-    // ) {
-    //   setSendMessage("Por favor, completa todos los campos requeridos.");
-    //   setOpenSnackbar(true);
-    //   return;
-    // }
+    if (
+      !formData.nombre ||
+      !formData.apellido ||
+      !formData.telefono ||
+      !formData.email ||
+      !formData.servicio ||
+      !formData.fecha
+    ) {
+      setSendMessage("Por favor, completa todos los campos requeridos.");
+      setOpenSnackbar(true);
+      return;
+    }
 
     console.log("Datos: ", formData);
     try {
