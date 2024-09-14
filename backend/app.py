@@ -1,11 +1,12 @@
+import datetime
 from functools import wraps
 import bcrypt
 from flask import Flask, request, jsonify
 from flask_login import LoginManager, current_user, login_required, login_user
-from sqlalchemy import Boolean, create_engine, Column, String, Integer
+from sqlalchemy import Boolean, Date, DateTime, create_engine, Column, String, Integer
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from marshmallow import Schema, ValidationError, fields
+from marshmallow import Schema, ValidationError, fields, post_load
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
@@ -52,7 +53,28 @@ class UserClinic(Base):
     def is_active_user(self):
         return self.is_active
     
+class UserAppointment(Base):
+    __tablename__ = 'add_user_appointment'
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100))
+    apellido = Column(String(100))
+    email = Column(String(100))
+    telefono = Column(Integer)
+    servicio = Column(String(100))
+    fecha = Column(DateTime)
 Base.metadata.create_all(engine)
+
+class UserAppointmentSchema(Schema):
+    id = fields.Int(dump_only=True)
+    nombre = fields.Str(required=True)
+    apellido = fields.Str(required=True)
+    email = fields.Str(required=True)
+    telefono = fields.Int(required=True)
+    servicio = fields.Str(required=True)
+    fecha = fields.DateTime(required=True)
+
+user_appointSchema = UserAppointmentSchema() # todo: cambie el nombre de schema
+users_appointSchema = UserAppointmentSchema(many=True) # todo: este tambien
 
 class UserClinicSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -60,8 +82,8 @@ class UserClinicSchema(Schema):
     email = fields.Str(required=True, unique=True)
     password = fields.Str(required=True)
 
-user_clinic_schema = UserClinicSchema()
-users_clinic_schema = UserClinicSchema(many=True)
+user_clinic_schema = UserClinicSchema() 
+users_clinic_schema = UserClinicSchema(many=True) 
 
 # Decorador para proteger endpoint
 # def role_required(role):
@@ -145,8 +167,37 @@ def logout():
     login_manager.logout_user()
     return jsonify({'message': 'Session closed successfully'}), 200
 
+# Agregar citas a la base de datos
+@app.route('/appointment', methods=['POST'])
+def user_appointment():
+    if request.method == 'POST':
+        session = Session()
+        try:
+            data = user_appointSchema.load(request.json)
+            nombre = data.get('nombre')
+            apellido = data.get('apellido')
+            email = data.get('email')
+            telefono = data.get('telefono')
+            servicio = data.get('servicio')
+            fecha = data.get('fecha').strftime('%Y-%m-%d %H:%M:%S')
+            user_appoint = session.query(UserAppointment).filter_by(nombre=nombre,apellido=apellido,email=email,telefono=telefono, servicio=servicio, fecha=fecha).first()
+            if user_appoint:
+                return jsonify({'message': 'Appointment already exists ❌'}), 400 
+            else:
+                new_appoint = UserAppointment(nombre=nombre, apellido=apellido, email=email, telefono=telefono, servicio=servicio, fecha=fecha)
+                session.add(new_appoint)
+                session.commit()
+                return jsonify({'message': 'Appointment created successfully ✅'}), 201
+        except ValidationError as err:
+            print("Errores de validación:", err.messages)
+            return jsonify(err.messages), 400
+        except Exception as e:
+            # revertir la sesion en caso de error
+            session.rollback()
+            return jsonify({'message': '⚠️ Error insert to Data Base, Contact with Sopport ⚠️'+ str(e)}), 500
+        finally:
+            session.close()
         
-
 # Mostrar todos los datos de la base de datos 
 @app.route('/registrados', methods=['GET'])
 @login_required

@@ -7,7 +7,6 @@ import {
   Grid,
   Card,
   CardContent,
-  CardActions,
   Button,
   TextField,
   FormControl,
@@ -17,7 +16,6 @@ import {
   SelectChangeEvent,
   Box,
   Chip,
-  Avatar,
   ThemeProvider,
   createTheme,
   CssBaseline,
@@ -29,6 +27,7 @@ import {
   Event as EventIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
+import axios from "axios";
 
 interface Service {
   id: number;
@@ -40,28 +39,42 @@ interface Service {
 
 const services: Service[] = [
   {
+    id: 0,
+    name: "Consulta",
+    description: "Consulta Dental y revición",
+    price: 30,
+    available: true,
+  },
+  {
     id: 1,
     name: "Limpieza dental",
     description: "Limpieza profunda y pulido",
-    price: 80,
+    price: 30,
     available: true,
   },
   {
     id: 2,
+    name: "Tratamiento",
+    description: "Tratamiento de caries",
+    price: 40,
+    available: true,
+  },
+  {
+    id: 3,
     name: "Blanqueamiento",
     description: "Blanqueamiento profesional",
     price: 200,
     available: true,
   },
   {
-    id: 3,
+    id: 4,
     name: "Extracción",
     description: "Extracción de dientes o muelas",
     price: 150,
     available: false,
   },
   {
-    id: 4,
+    id: 5,
     name: "Ortodoncia",
     description: "Tratamiento de ortodoncia",
     price: 3000,
@@ -87,12 +100,15 @@ const UserAppoin: React.FC = () => {
     apellido: "",
     telefono: "",
     email: "",
+    servicio: "",
     fecha: "",
   });
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [sendmessage, setSendMessage] = useState("");
 
-  const handleServiceChange = (event: SelectChangeEvent) => {
-    setSelectedService(event.target.value as string);
+  const handleServiceChange = (e: SelectChangeEvent) => {
+    setSelectedService(e.target.value as string);
+    setFormData({ ...formData, servicio: e.target.value });
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,14 +116,51 @@ const UserAppoin: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    console.log("Datos de la cita:", {
-      ...formData,
-      servicio: selectedService,
-    });
-    // Aquí iría la lógica para enviar los datos a la base de datos
-    setOpenSnackbar(true);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("Datos de la cita:", formData);
+    // const appointmentData = {
+    //   ...formData,
+    //   servicio: selectedService,
+    //   fecha: new Date(formData.fecha).toISOString(),
+    // };
+
+    // if (
+    //   !formData.nombre ||
+    //   !formData.apellido ||
+    //   !formData.telefono ||
+    //   !formData.email ||
+    //   !formData.servicio ||
+    //   !formData.fecha
+    // ) {
+    //   setSendMessage("Por favor, completa todos los campos requeridos.");
+    //   setOpenSnackbar(true);
+    //   return;
+    // }
+
+    console.log("Datos: ", formData);
+    try {
+      console.log("Datos dentro del try antes:  ", formData);
+      const resp = await axios.post(
+        `${import.meta.env.VITE_API_URL}/appointment `,
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Datos dentro del try despues:  ", formData);
+      setSendMessage(resp.data.message);
+      setOpenSnackbar(true);
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setSendMessage(
+          err.response.data.message || "An error occurred. Please try again."
+        );
+        setOpenSnackbar(true);
+      }
+    }
   };
 
   const handleCloseSnackbar = (
@@ -211,8 +264,9 @@ const UserAppoin: React.FC = () => {
                           name="nombre"
                           value={formData.nombre}
                           onChange={handleInputChange}
-                          required
+                          //   required
                           variant="outlined"
+                          type="text"
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -222,8 +276,9 @@ const UserAppoin: React.FC = () => {
                           name="apellido"
                           value={formData.apellido}
                           onChange={handleInputChange}
-                          required
+                          //   required
                           variant="outlined"
+                          type="text"
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -233,8 +288,9 @@ const UserAppoin: React.FC = () => {
                           name="telefono"
                           value={formData.telefono}
                           onChange={handleInputChange}
-                          required
+                          //   required
                           variant="outlined"
+                          type="number"
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -245,7 +301,7 @@ const UserAppoin: React.FC = () => {
                           type="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          required
+                          //   required
                           variant="outlined"
                         />
                       </Grid>
@@ -260,7 +316,7 @@ const UserAppoin: React.FC = () => {
                           InputLabelProps={{
                             shrink: true,
                           }}
-                          required
+                          //   required
                           variant="outlined"
                         />
                       </Grid>
@@ -292,7 +348,8 @@ const UserAppoin: React.FC = () => {
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        message="Cita reservada con éxito"
+        message={sendmessage}
+        // message="Cita reservada con éxito"
         action={
           <IconButton
             size="small"
