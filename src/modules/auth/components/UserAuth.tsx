@@ -20,6 +20,7 @@ import {
   Lock,
 } from "@mui/icons-material";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -57,6 +58,7 @@ const UserForm: React.FC = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [error, setError] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -96,6 +98,8 @@ const UserForm: React.FC = () => {
       setSnackbarMessage(resp.data.message);
       setOpenSnackbar(true);
       console.log("Response: ", resp.data);
+      // si existe el usuario que lo mande a el endpoint
+      navigate(resp.data.redirect_url, { replace: true });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         setSnackbarMessage(
