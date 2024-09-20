@@ -28,7 +28,7 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import axios from "axios";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface Service {
   id: number;
