@@ -28,6 +28,7 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import axios from "axios";
+import { Navigate, useNavigate } from "react-router-dom";
 
 interface Service {
   id: number;
@@ -105,6 +106,7 @@ const UserAppoin: React.FC = () => {
   });
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [sendmessage, setSendMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleServiceChange = (e: SelectChangeEvent) => {
     setSelectedService(e.target.value as string);
@@ -173,14 +175,23 @@ const UserAppoin: React.FC = () => {
     setOpenSnackbar(false);
   };
 
+  const toBack = () => {
+    navigate("/", { replace: true });
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ flexGrow: 2 }}>
         <AppBar position="static" color="primary">
           <Toolbar>
-            <LocalHospitalIcon sx={{ mr: 2 }} />
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            <LocalHospitalIcon sx={{ mr: 2 }} onClick={toBack} />
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ flexGrow: 1 }}
+              onClick={toBack}
+            >
               Software Dental Dentixa
             </Typography>
           </Toolbar>
