@@ -28,9 +28,14 @@ import {
 import {
   LocalHospital as LocalHospitalIcon,
   Dashboard as DashboardIcon,
-  Person as PersonIcon,
+  VerifiedUser as PersonIcon,
+  Logout as IsLogout,
+  AccountCircle as IsAccountCircle,
+  AppRegistration as IsAppRegistration,
+  Today as IsToday,
 } from "@mui/icons-material";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface User {
   id: number;
@@ -78,7 +83,11 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [nuevosClientes, setNuevosClientes] = useState<number | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<string>(
+    "Usuario no autenticado"
+  );
+  const navigate = useNavigate();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -122,6 +131,35 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/logout`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Credentials": "true",
+            "Cache-Control": "no-cache",
+          },
+        }
+      );
+      if (response.status === 200) {
+        console.log(response.data.message);
+        setCurrentUser("Usuario no autenticado");
+        navigate(response.data.redirect_url);
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("Error logging out:", error);
+        console.error("Error message:", error.response.data);
+      }
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -153,9 +191,9 @@ const AdminDashboard: React.FC = () => {
             <List>
               <ListItem>
                 <ListItemIcon>
-                  <PersonIcon />
+                  <IsAccountCircle />
                 </ListItemIcon>
-                <ListItemText primary={"Usuario no autenticado"} />
+                <ListItemText primary={currentUser} />
               </ListItem>
             </List>
             <Divider />
@@ -167,6 +205,12 @@ const AdminDashboard: React.FC = () => {
                 <ListItemText primary="Dashboard" />
               </ListItem>
             </List>
+            <ListItem button>
+              <ListItemIcon>
+                <IsLogout />
+              </ListItemIcon>
+              <ListItemText primary="Logout" onClick={handleLogout} />
+            </ListItem>
           </Box>
         </Drawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
@@ -182,7 +226,8 @@ const AdminDashboard: React.FC = () => {
                   }}
                 >
                   <Typography variant="h6" gutterBottom component="div">
-                    <PersonIcon sx={{ mr: 1, mb: -0.5 }} /> Usuarios Registrados
+                    <IsAppRegistration sx={{ mr: 1, mb: -0.5 }} /> Usuarios
+                    Registrados
                   </Typography>
                   <TableContainer>
                     <Table size="medium">
@@ -207,7 +252,7 @@ const AdminDashboard: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
                   <Typography variant="h6" gutterBottom component="div">
-                    <PersonIcon sx={{ mr: 1, mb: -0.5 }} /> Nuevos Clientes Hoy
+                    <IsToday sx={{ mr: 1, mb: -0.5 }} /> Nuevos Clientes Hoy
                   </Typography>
                   <Typography variant="h4" component="div">
                     {nuevosClientes !== null ? nuevosClientes : "Cargando..."}
@@ -223,7 +268,7 @@ const AdminDashboard: React.FC = () => {
                   }}
                 >
                   <Typography variant="h6" gutterBottom component="div">
-                    Citas Solicitadas
+                    <PersonIcon sx={{ mr: 1, mb: -0.5 }} /> Citas Solicitadas
                   </Typography>
                   <TableContainer>
                     <Table size="medium">

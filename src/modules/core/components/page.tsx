@@ -20,14 +20,16 @@ import {
   createTheme,
 } from "@mui/material";
 import {
-  Menu as MenuIcon,
+  // Menu as MenuIcon,
   CheckCircleOutline as CheckIcon,
   CalendarToday as CalendarIcon,
   AttachMoney as MoneyIcon,
   People as PeopleIcon,
   Security as SecurityIcon,
+  LocalHospital as LocalHospitalIcon,
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import dashboard from "../../../assets/dashboard.png";
 
 const DentalSoftwareLanding: React.FC = () => {
   const theme = createTheme({
@@ -47,7 +49,7 @@ const DentalSoftwareLanding: React.FC = () => {
         <AppBar position="static">
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Dentixa
+              <LocalHospitalIcon sx={{ mr: 1, mb: -0.5 }} /> Software Dentixa
             </Typography>
             <IconButton
               size="large"
@@ -56,7 +58,7 @@ const DentalSoftwareLanding: React.FC = () => {
               aria-label="menu"
               sx={{ mr: 2 }}
             >
-              <MenuIcon />
+              {/* <MenuIcon /> */}
             </IconButton>
             <Button
               variant="contained"
@@ -90,7 +92,11 @@ const DentalSoftwareLanding: React.FC = () => {
             <div
               style={{ background: "#f0f0f0", height: "300px", width: "100%" }}
             >
-              [Imagen]
+              <img
+                src={dashboard}
+                alt=""
+                style={{ width: "100%", height: "100%", borderRadius: "10px" }}
+              />
             </div>
           </Grid>
         </Grid>

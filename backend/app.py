@@ -1,7 +1,8 @@
 import datetime
 import bcrypt
-from flask import Flask, request, jsonify
-from flask_login import LoginManager, current_user, login_required, login_user
+from flask import Flask, redirect, request, jsonify, session as flask_session, url_for
+from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
+import flask_login
 from sqlalchemy import Boolean, DateTime, create_engine, Column, String, Integer, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -9,16 +10,16 @@ from marshmallow import Schema, ValidationError, fields
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
+import secrets
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
-# para iniciar session
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'all_login'
+login_manager.user_loader(login_user)
 
 app.secret_key = os.getenv('SECRET_KEY')
 db_nombre = os.getenv('db_nombre')
@@ -31,7 +32,7 @@ Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
 session = Session()
-class UserClinic(Base):
+class UserClinic(Base, UserMixin):
     __tablename__ = 'add_user_dentixa'
     id = Column(Integer, primary_key=True)
     nombre = Column(String(100))
@@ -52,6 +53,7 @@ class UserClinic(Base):
 
     def is_active_user(self):
         return self.is_active
+    
     
 class UserAppointment(Base):
     __tablename__ = 'add_user_appointment'
@@ -85,18 +87,6 @@ class UserClinicSchema(Schema):
 user_clinic_schema = UserClinicSchema() 
 users_clinic_schema = UserClinicSchema(many=True) 
 
-# Decorador para proteger endpoint
-# def role_required(role):
-#     def wrapper(f):
-#         @wraps(f)
-#         def decorator_f(*args, **kwargs):
-#             if not current_user.is_authenticated:
-#                 return jsonify({'message': 'Access denied ❌'}), 403
-#             if current_user.role != role:
-#                 return jsonify({'message': 'Access denied ❌'}), 403
-#             return f(*args, **kwargs)
-#         return decorator_f
-#     return wrapper
 
 # Registrar usuario
 @app.route('/register', methods=['POST'])
@@ -113,7 +103,6 @@ def get_user():
             user = session.query(UserClinic).filter_by(nombre=nombre, email=email, password=password, role=role).first()
             if user or exist_email:
                 return jsonify({'message': 'User already exists ❌'}), 400
-            
             hashead_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             new_user = UserClinic(nombre=nombre, email=email, password=hashead_password, role=role)
             new_user.is_active = True
@@ -129,6 +118,9 @@ def get_user():
             return jsonify({"message": str(e)}), 500
         finally:
             session.close()
+    
+def generate_token():
+    return secrets.token_urlsafe(32)
 
 # Ingresar usuario
 @app.route('/login', methods=['POST'])
@@ -140,13 +132,21 @@ def all_login():
             email = data.get('email')
             password = data.get('password')
             user = session.query(UserClinic).filter_by(email=email).first()
+            print("Usuario existe:", user is not None)
             if user is None:
                 return jsonify({'message': 'Invalid name ❌'}), 400
             hashted = bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8'))
+            print("Contraseña coincide:", hashted)
             if user and hashted:
-                user.is_active = True
-                session.commit()
+                token = generate_token()
+                flask_session['auth_token'] = token
+                print("es un token :",token)
+                print(user.nombre)
+                print(user.email)
                 login_user(user)
+                user.is_active = True
+                print(flask_session)
+                session.commit()
                 if user.role == "user" and user.is_active:
                     return jsonify({'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user), 'redirect_url': '/appointment'}), 200
                 elif user.role == 'admin' and user.is_active:
@@ -157,15 +157,22 @@ def all_login():
             return jsonify({'message': str(e)}), 500
         finally:
             session.close()
+            flask_session.modified = True
 
 # Cerrar Session
 @app.route('/logout', methods=['POST'])
-def logout():
-    user = login_manager.current_user()
-    user.is_active = False
-    session.commit()
-    login_manager.logout_user()
-    return jsonify({'message': 'Session closed successfully'}), 200
+def all_logout():
+    if current_user:
+        logout_user()
+        flask_session.clear()
+        flask_session.pop('auth_token', None)
+        print(f"{not current_user.is_authenticated} logged out")
+        return jsonify({'message': 'Logout Success ✅','redirect_url': '/'}), 200
+    else:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+
+
 
 # Agregar citas a la base de datos
 @app.route('/appointment', methods=['POST'])
@@ -229,7 +236,5 @@ def nuevos_clientes():
         session.close()
 
 
-            
-            
 if __name__ == '__init__':
     app.run(debug=True)
