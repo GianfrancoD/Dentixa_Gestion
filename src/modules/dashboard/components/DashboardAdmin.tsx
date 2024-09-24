@@ -101,7 +101,7 @@ const AdminDashboard: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get<User[]>(
-        `${import.meta.env.VITE_API_URL}/registrados`
+        `${import.meta.env.VITE_API_URL}/appoint/registrados`
       );
       setUsers(response.data);
     } catch (error) {
@@ -112,7 +112,7 @@ const AdminDashboard: React.FC = () => {
   const fetchAppointments = async () => {
     try {
       const response = await axios.get<Appointment[]>(
-        `${import.meta.env.VITE_API_URL}/registrado_cita`
+        `${import.meta.env.VITE_API_URL}/appoint/registrado_cita`
       );
       setAppointments(response.data);
     } catch (error) {
@@ -123,7 +123,7 @@ const AdminDashboard: React.FC = () => {
   const fetchNuevosClientes = async () => {
     try {
       const response = await axios.get<{ nuevos_clientes: number }>(
-        `${import.meta.env.VITE_API_URL}/nuevos_clientes`
+        `${import.meta.env.VITE_API_URL}/appoint/nuevos_clientes`
       );
       setNuevosClientes(response.data.nuevos_clientes);
     } catch (error) {
@@ -134,7 +134,7 @@ const AdminDashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/logout`,
+        `${import.meta.env.VITE_API_URL}/auth/logout`,
         {},
         {
           withCredentials: true,

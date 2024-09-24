@@ -19,7 +19,7 @@ const router = createBrowserRouter([
     element: <UserAppoin />,
   },
   {
-    // citas
+    // administador
     path: "/DashAd",
     element: <AdminDashboard />,
   },
