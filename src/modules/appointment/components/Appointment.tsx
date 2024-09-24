@@ -144,7 +144,7 @@ const UserAppoin: React.FC = () => {
     try {
       console.log("Datos dentro del try antes:  ", formData);
       const resp = await axios.post(
-        `${import.meta.env.VITE_API_URL}/appointment `,
+        `${import.meta.env.VITE_API_URL}/appoint/appointment `,
         formData,
         {
           headers: {
