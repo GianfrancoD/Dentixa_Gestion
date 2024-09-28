@@ -21,9 +21,9 @@ app.config['SECRET_KEY'] = secrets.token_urlsafe(25)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.user_loader(login_user)
+# login_manager.user_loader(login_user)
 
-session = Session()
+# session = Session()
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(Appoint, url_prefix='/appoint')

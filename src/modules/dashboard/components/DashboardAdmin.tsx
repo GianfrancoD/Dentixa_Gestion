@@ -84,9 +84,7 @@ const AdminDashboard: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [nuevosClientes, setNuevosClientes] = useState<number | null>(null);
   const [open, setOpen] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<string>(
-    "Usuario no autenticado"
-  );
+  const [currentUser, setCurrentUser] = useState<string>("");
   const navigate = useNavigate();
 
   const handleOpen = () => setOpen(true);
@@ -96,6 +94,7 @@ const AdminDashboard: React.FC = () => {
     fetchUsers();
     fetchAppointments();
     fetchNuevosClientes();
+    fetchCurrentUser();
   }, []);
 
   const fetchUsers = async () => {
@@ -147,7 +146,7 @@ const AdminDashboard: React.FC = () => {
       );
       if (response.status === 200) {
         console.log(response.data.message);
-        setCurrentUser("Usuario no autenticado");
+        setCurrentUser(response.data || "Usuario no autenticado");
         navigate(response.data.redirect_url);
       } else {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -157,6 +156,18 @@ const AdminDashboard: React.FC = () => {
         console.error("Error logging out:", error);
         console.error("Error message:", error.response.data);
       }
+    }
+  };
+
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/auth/current-user`
+        // { withCredentials: true }
+      );
+      setCurrentUser(response.data.nombre);
+    } catch (error) {
+      console.error("Error fetching current user:", error);
     }
   };
 
@@ -193,7 +204,11 @@ const AdminDashboard: React.FC = () => {
                 <ListItemIcon>
                   <IsAccountCircle />
                 </ListItemIcon>
-                <ListItemText primary={currentUser} />
+                <ListItemText
+                  primary={
+                    currentUser ? `Welcome, ${currentUser}` : "Loading..."
+                  }
+                />
               </ListItem>
             </List>
             <Divider />

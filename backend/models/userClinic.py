@@ -2,6 +2,7 @@
 from sqlalchemy import Column, DateTime, String, Integer, Boolean, func
 from ..models import Base
 from flask_login import UserMixin, current_user, login_required, login_user, logout_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class UserClinic(Base, UserMixin):
@@ -9,7 +10,7 @@ class UserClinic(Base, UserMixin):
     id = Column(Integer, primary_key=True)
     nombre = Column(String(100))
     email = Column(String(100), unique=True)
-    password = Column(String(100))
+    password_hash = Column(String(255))
     is_active = Column(Boolean, default=False, nullable=False)
     role = Column(String(70), default='user')
     fecha_registro = Column(DateTime, default=func.now())
@@ -25,3 +26,9 @@ class UserClinic(Base, UserMixin):
 
     def is_active_user(self):
         return self.is_active
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
