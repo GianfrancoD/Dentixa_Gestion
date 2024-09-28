@@ -21,7 +21,6 @@ import {
 } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
 
 interface TabPanelProps {
   children?: React.ReactNode;
