@@ -1,4 +1,5 @@
 
+from datetime import timedelta
 import os
 import secrets
 from flask import Flask, redirect, request, jsonify, session as flask_session, url_for
@@ -21,9 +22,7 @@ app.config['SECRET_KEY'] = secrets.token_urlsafe(25)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-# login_manager.user_loader(login_user)
-
-# session = Session()
+login_manager.user_loader(login_user)
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(Appoint, url_prefix='/appoint')
@@ -32,6 +31,14 @@ app.register_blueprint(Appoint, url_prefix='/appoint')
 def load_user(user_id):
     return UserClinic.query.get(int(user_id))
 
+@login_manager.request_loader
+def request_loader(request):
+    session = Session()
+    email = request.form.get('email')
+    user = session.query(UserClinic).filter_by(email=email).first()
+    if user:
+        return user
+    return None
 
 if __name__ == '__init__':
     app.run(debug=True)

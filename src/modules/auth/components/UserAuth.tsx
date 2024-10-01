@@ -18,9 +18,11 @@ import {
   AccountCircle,
   Email,
   Lock,
+  // Password,
 } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { validateRegister } from "../services/authServices";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -79,10 +81,51 @@ const UserForm: React.FC = () => {
   const handleMouseDownPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
   };
+  // const validateRegister = async () => {
+  //   try {
+  //     const resp = await axios.post(
+  //       `${import.meta.env.VITE_API_URL}/auth/validate_register`,
+  //       {
+  //         email: target.email,
+  //         nombre: target.nombre,
+  //         password: target.password,
+  //       },
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+  //     return resp.data.user_exists;
+  //   } catch (error) {
+  //     console.error("Error validating email:", error);
+  //     throw new Error("Error validating email.");
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setTarget({ nombre: "", email: "", password: "" });
+
+    if (value === 1) {
+      try {
+        const existUser = await validateRegister(
+          target.email,
+          target.nombre,
+          target.password
+        );
+        if (existUser) {
+          setSnackbarMessage("El usuario ya existe ❌");
+          setOpenSnackbar(true);
+          return;
+        }
+      } catch (error) {
+        setSnackbarMessage(`${error}`);
+        setOpenSnackbar(true);
+        return;
+      }
+    }
+
     const endpoint = value === 0 ? "auth/login" : "auth/register";
     try {
       const resp = await axios.post(

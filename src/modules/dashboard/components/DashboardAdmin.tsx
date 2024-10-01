@@ -34,25 +34,15 @@ import {
   AppRegistration as IsAppRegistration,
   Today as IsToday,
 } from "@mui/icons-material";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-
-interface User {
-  id: number;
-  nombre: string;
-  email: string;
-  is_active: boolean;
-}
-
-interface Appointment {
-  id: number;
-  nombre: string;
-  apellido: string;
-  telefono: string;
-  email: string;
-  servicio: string;
-  fecha: string;
-}
+// import axios from "axios";
+// import { useNavigate } from "react-router-dom";
+import { User, Appointment } from "../helpers/helperDashboard";
+import { handleLogout } from "../../auth/services/authServices";
+import {
+  fetchUsers,
+  fetchAppointments,
+  fetchNuevosClientes,
+} from "../../appointment/services/appointServices";
 
 const theme = createTheme({
   palette: {
@@ -84,90 +74,38 @@ const AdminDashboard: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [nuevosClientes, setNuevosClientes] = useState<number | null>(null);
   const [open, setOpen] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<string>("");
-  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState("");
+  // const navigate = useNavigate();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   useEffect(() => {
-    fetchUsers();
-    fetchAppointments();
-    fetchNuevosClientes();
-    fetchCurrentUser();
+    loadAppointment();
+    loadAuth();
   }, []);
 
-  const fetchUsers = async () => {
+  const loadAppointment = async () => {
     try {
-      const response = await axios.get<User[]>(
-        `${import.meta.env.VITE_API_URL}/appoint/registrados`
-      );
-      setUsers(response.data);
+      const usersData = await fetchUsers();
+      setUsers(usersData);
+
+      const appointmentsData = await fetchAppointments();
+      setAppointments(appointmentsData);
+
+      const nuevosClientesData = await fetchNuevosClientes();
+      setNuevosClientes(nuevosClientesData.nuevos_clientes);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error loading data:", error);
     }
   };
 
-  const fetchAppointments = async () => {
+  const loadAuth = async () => {
     try {
-      const response = await axios.get<Appointment[]>(
-        `${import.meta.env.VITE_API_URL}/appoint/registrado_cita`
-      );
-      setAppointments(response.data);
+      const auth = await handleLogout();
+      setCurrentUser(auth);
     } catch (error) {
-      console.error("Error fetching appointments:", error);
-    }
-  };
-
-  const fetchNuevosClientes = async () => {
-    try {
-      const response = await axios.get<{ nuevos_clientes: number }>(
-        `${import.meta.env.VITE_API_URL}/appoint/nuevos_clientes`
-      );
-      setNuevosClientes(response.data.nuevos_clientes);
-    } catch (error) {
-      console.error("Error fetching nuevos clientes:", error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/logout`,
-        {},
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Credentials": "true",
-            "Cache-Control": "no-cache",
-          },
-        }
-      );
-      if (response.status === 200) {
-        console.log(response.data.message);
-        setCurrentUser(response.data || "Usuario no autenticado");
-        navigate(response.data.redirect_url);
-      } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        console.error("Error logging out:", error);
-        console.error("Error message:", error.response.data);
-      }
-    }
-  };
-
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/auth/current-user`
-        // { withCredentials: true }
-      );
-      setCurrentUser(response.data.nombre);
-    } catch (error) {
-      console.error("Error fetching current user:", error);
+      console.error("Error loading data:", error);
     }
   };
 
@@ -206,7 +144,9 @@ const AdminDashboard: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    currentUser ? `Welcome, ${currentUser}` : "Loading..."
+                    currentUser !== null
+                      ? `Welcome, ${currentUser}`
+                      : "Loading..."
                   }
                 />
               </ListItem>

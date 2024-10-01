@@ -46,6 +46,18 @@ def get_user():
             return jsonify({"message": str(e)}), 500
         finally:
             session.close()
+
+@auth.route('/validate_register', methods=['POST'])
+def validateAll():
+    session = Session()
+    if request.method == 'POST':
+        # data = user_clinic_schema.load(request.json)
+        email = request.json.get('email')
+        validate = session.query(UserClinic).filter_by(email=email).first()
+        if validate:
+            return jsonify({'user_exists': True})
+        else:
+            return jsonify({'user_exists': False})
     
 def generate_token():
     return secrets.token_urlsafe(32)
@@ -65,7 +77,7 @@ def all_login():
                 return jsonify({'message': 'Invalid name ❌'}), 400
             hashted = generate_password_hash(password)
             print("Contraseña coincide:", hashted)
-            if user.check_password(password):
+            if user and user.check_password(password):
                 token = generate_token()
                 flask_session['auth_token'] = token
                 print("es un token :",token)
@@ -80,36 +92,29 @@ def all_login():
                 return jsonify({'message': 'Invalid credentials ❌'}), 400
         except Exception as e:
             return jsonify({'message': str(e)}), 500
-            
         finally:
             session.close()
-            flask_session.modified = True
+            # flask_session.modified = True
 
 # Cerrar Session
 @auth.route('/logout', methods=['POST'])
+@login_required
 def all_logout():
-    if request.method == 'POST':
-        print(f"Current user authenticated before logout: {current_user.is_authenticated}")  # Verifica antes de cerrar sesión
-        if current_user:
-            logout_user()  # Cierra la sesión
-            print(f"Current user authenticated after logout: {current_user.is_authenticated}")  # Debería ser False
-            flask_session.clear()
-            flask_session.pop('auth_token', None)
-            return jsonify({'message': 'Logout Success ✅', 'redirect_url': '/'}), 200
-        else:
-            return jsonify({'message': 'Unauthorized'}), 401
-    
-
-
-@auth.route('/current-user', methods=['GET'])
-def get_current_user():
-    session = Session()
-    if 'auth_token' in flask_session:  # Verifica si hay un token de autenticación
-        user_id = flask_session['user_id']  # Asegúrate de que 'user_id' esté almacenado en la sesión
-        user = session.query(UserClinic).filter_by(id=user_id).first()
-        if user:
-            return jsonify({'nombre': user.nombre}), 200  # Devuelve solo el nombre
-        else:
-            return jsonify({'message': 'User not found'}), 404
+    print(f"Current user authenticated before logout: {current_user.is_authenticated}") 
+    if current_user.is_authenticated:
+        user_email = current_user.email 
+        print(f"User email: {user_email}") 
+        logout_user() 
+        flask_session.clear() 
+        return jsonify({'message': 'Logout Success ✅', 'redirect_url': '/'}), 200
     else:
-        return jsonify({'message': 'User not logged in'}), 401
+        return jsonify({'message': 'Unauthorized'}), 401
+
+# Obtener usuario actual
+# @auth.route('/current-user', methods=['GET'])
+# @login_required
+# def get_current_user():
+#     if current_user.is_authenticated:
+#         return jsonify({'nombre': current_user.nombre}), 200 
+#     else:
+#         return jsonify({'message': 'User not logged in'}), 401

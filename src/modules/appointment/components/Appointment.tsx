@@ -121,11 +121,6 @@ const UserAppoin: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Datos de la cita:", formData);
-    // const appointmentData = {
-    //   ...formData,
-    //   servicio: selectedService,
-    //   fecha: new Date(formData.fecha).toISOString(),
-    // };
 
     if (
       !formData.nombre ||
