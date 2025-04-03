@@ -37,7 +37,7 @@ import {
 // import axios from "axios";
 // import { useNavigate } from "react-router-dom";
 import { User, Appointment } from "../helpers/helperDashboard";
-import { handleLogout } from "../../auth/services/authServices";
+import { getCurrentUser, handleLogout } from "../../auth/services/authServices";
 import {
   fetchUsers,
   fetchAppointments,
@@ -83,6 +83,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     loadAppointment();
     loadAuth();
+    currentUsers();
   }, []);
 
   const loadAppointment = async () => {
@@ -104,6 +105,15 @@ const AdminDashboard: React.FC = () => {
     try {
       const auth = await handleLogout();
       setCurrentUser(auth);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
+  };
+
+  const currentUsers = async () => {
+    try {
+      const currents = await getCurrentUser();
+      setCurrentUser(currents);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -144,9 +154,7 @@ const AdminDashboard: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    currentUser !== null
-                      ? `Welcome, ${currentUser}`
-                      : "Loading..."
+                    currentUser ? `Welcome, ${currentUser}` : "Loading..."
                   }
                 />
               </ListItem>

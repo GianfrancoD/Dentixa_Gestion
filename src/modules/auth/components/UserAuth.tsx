@@ -141,6 +141,7 @@ const UserForm: React.FC = () => {
       setSnackbarMessage(resp.data.message);
       setOpenSnackbar(true);
       console.log("Response: ", resp.data);
+      localStorage.setItem("token", resp.data.token);
       // si existe el usuario que lo mande a el endpoint
       navigate(resp.data.redirect_url, { replace: true });
     } catch (error) {

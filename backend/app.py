@@ -19,6 +19,7 @@ from .routes.appointment import Appoint
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(25)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -40,5 +41,5 @@ def request_loader(request):
         return user
     return None
 
-if __name__ == '__init__':
+if __name__ == '__main__':
     app.run(debug=True)

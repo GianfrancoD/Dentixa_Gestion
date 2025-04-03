@@ -17,14 +17,15 @@ export const handleLogout = async (): Promise<string> => {
 
     if (response.status === 200) {
       console.log(response.data.message);
+      localStorage.removeItem("token");
       return response.data.redirect_url;
     } else {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      console.error("Error logging out:", error);
-      console.error("Error message:", error.response.data);
+    if (axios.isAxiosError(error)) {
+      console.error("Error logging out:", error.response);
+      console.error("Error message:", error);
     }
     return "";
   }
@@ -55,5 +56,29 @@ export const validateRegister = async (
   } catch (error) {
     console.error("Error validating email:", error);
     throw new Error("Error validating email.");
+  }
+};
+
+//  ----------------------------------------------------------------
+
+export const getCurrentUser = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL}/auth/current-user`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error fetching current user:", error.response);
+      console.error("Error message:", error);
+    }
   }
 };

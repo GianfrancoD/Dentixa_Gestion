@@ -1,7 +1,9 @@
 # Flask imports
+import datetime
 import email
 from flask import Blueprint, request, jsonify, session as flask_session
 from flask_login import login_user, logout_user, current_user
+import jwt
 from marshmallow import ValidationError
 from ..app import *
 from ..models.userClinic import UserClinic
@@ -11,8 +13,18 @@ import secrets
 import bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash
 
+SECRET_KEY = secrets.token_urlsafe(25)
+
 
 auth = Blueprint('auth', __name__)
+
+# def generate_jwt(user_id):
+#     payload = {
+#         'sub': user_id,
+#         'exp': datetime.datetime.now() + datetime.timedelta(hours=1)
+#         }
+#     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+#     return token
 
 # Registrar usuario
 @auth.route('/register', methods=['POST'])
@@ -51,13 +63,13 @@ def get_user():
 def validateAll():
     session = Session()
     if request.method == 'POST':
-        # data = user_clinic_schema.load(request.json)
         email = request.json.get('email')
         validate = session.query(UserClinic).filter_by(email=email).first()
-        if validate:
-            return jsonify({'user_exists': True})
-        else:
-            return jsonify({'user_exists': False})
+        return jsonify({'user_exists': bool(validate)})
+        # if validate:
+        #     return jsonify({'user_exists': True})
+        # else:
+        #     return jsonify({'user_exists': False})
     
 def generate_token():
     return secrets.token_urlsafe(32)
@@ -79,6 +91,7 @@ def all_login():
             print("Contraseña coincide:", hashted)
             if user and user.check_password(password):
                 token = generate_token()
+                # token = generate_jwt(user.id)
                 flask_session['auth_token'] = token
                 print("es un token :",token)
                 print(f"nombre: {user.nombre}")
@@ -87,18 +100,17 @@ def all_login():
                 user.is_active = True
                 print(flask_session)
                 session.commit()
-                return jsonify({'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user), 'redirect_url': '/DashAd' if user.role == 'admin' else '/appointment'}), 200
+                return jsonify({'token':token, 'message': 'Login Success ✅', 'user': user_clinic_schema.dump(user), 'redirect_url': '/DashAd' if user.role == 'admin' else '/appointment'}), 200
             else:
                 return jsonify({'message': 'Invalid credentials ❌'}), 400
         except Exception as e:
             return jsonify({'message': str(e)}), 500
         finally:
             session.close()
-            # flask_session.modified = True
 
 # Cerrar Session
 @auth.route('/logout', methods=['POST'])
-@login_required
+# @login_required
 def all_logout():
     print(f"Current user authenticated before logout: {current_user.is_authenticated}") 
     if current_user.is_authenticated:
@@ -109,12 +121,14 @@ def all_logout():
         return jsonify({'message': 'Logout Success ✅', 'redirect_url': '/'}), 200
     else:
         return jsonify({'message': 'Unauthorized'}), 401
-
-# Obtener usuario actual
-# @auth.route('/current-user', methods=['GET'])
-# @login_required
-# def get_current_user():
-#     if current_user.is_authenticated:
-#         return jsonify({'nombre': current_user.nombre}), 200 
-#     else:
-#         return jsonify({'message': 'User not logged in'}), 401
+    
+@auth.route('/current-user', methods=['GET'])
+def get_current_user():
+    if current_user.is_authenticated:
+        return jsonify({
+            'nombre': current_user.nombre,
+            'email': current_user.email,
+            'role': current_user.role
+        }), 200
+    else:
+        return jsonify({'message': 'Not Authenticated ❌'}), 401
